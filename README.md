@@ -8,18 +8,62 @@ n-gram speculation is already in 0.2.0. Stack it with DFlash2 at run time:
 --spec-type draft-dflash,ngram-cache --spec-draft-n-max 5
 ```
 
-## Build (Arch / CachyOS)
+## Install (Arch / CachyOS)
+
+This package is not on the AUR. Clone the repo, then build the `PKGBUILD` with paru, yay, or makepkg. Default GPU target is `gfx1100` (RX 7900 XT/XTX).
 
 ```bash
-sudo pacman -S --needed base-devel cmake ninja rocm-hip-sdk hip-runtime-amd hipblas rocblas
-# default GPU target is gfx1100 (RX 7900 XT/XTX)
+git clone https://github.com/maci0/llamacpp-rocm-dflash2.git
+cd llamacpp-rocm-dflash2
+```
+
+### paru
+
+```bash
+paru -Bi .
+```
+
+`-B` builds a PKGBUILD already on disk. `-i` installs it after the build. paru resolves `makedepends` (`cmake`, `ninja`, `rocm-hip-sdk`) and `depends` (`hip-runtime-amd`, `hipblas`, `rocblas`, …).
+
+Other GPUs:
+
+```bash
+AMDGPU_TARGETS='gfx1100;gfx1101;gfx1102;gfx1103' paru -Bi .
+```
+
+### yay
+
+yay has no local-PKGBUILD build flag. From the cloned tree, let makepkg pull deps and install:
+
+```bash
 makepkg -si
+```
+
+`-s` installs missing make/runtime deps with pacman. `-i` installs the resulting package. To have yay own the dep install instead:
+
+```bash
+yay -S --needed --asdeps cmake ninja rocm-hip-sdk
+makepkg -i
+```
+
+After a successful build, either helper can install the archive:
+
+```bash
+yay  -U llama.cpp-rocm-dflash2-*.pkg.tar.zst
+paru -U llama.cpp-rocm-dflash2-*.pkg.tar.zst
 ```
 
 Other GPUs:
 
 ```bash
 AMDGPU_TARGETS='gfx1100;gfx1101;gfx1102;gfx1103' makepkg -si
+```
+
+### makepkg only
+
+```bash
+sudo pacman -S --needed base-devel cmake ninja rocm-hip-sdk hip-runtime-amd hipblas rocblas
+makepkg -si
 ```
 
 ## Run
