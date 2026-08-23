@@ -6,3 +6,8 @@ dist/
 .src/
 llama.cpp-*/
 build/
+docs/bench/logs/
+docs/speed-bench/logs/
+.venv-convert/
+.venv-speed-bench/
+*.out

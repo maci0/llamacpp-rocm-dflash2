@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the Arch package (HIP, gfx110X unless AMDGPU_TARGETS is set).
+# Build the Arch package (HIP, all lemonade ISAs unless AMDGPU_TARGETS is set).
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"

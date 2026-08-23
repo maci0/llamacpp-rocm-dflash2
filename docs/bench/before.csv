@@ -1,0 +1,9 @@
+engine,label,tg_tps,notes
+lemonade b1311,none,35.23,ctx 4096 n=256 greedy Q4_K_M fa q4_0 KV
+lemonade b1311,ngram-simple 16/8,35.22,same recipe
+lemonade b1311,MTP n-max 1,45.98,same recipe
+lemonade b1311,DFlash,41.37,DFlash1 mrchuy bootstrap n-max 1
+v0.2.0 + DFlash2,none,18.6,same recipe on this HIP build
+v0.2.0 + DFlash2,ngram-simple 16/8,28.4,same recipe
+v0.2.0 + DFlash2,MTP n-max 1,30.1,same recipe
+v0.2.0 + DFlash2,DFlash,15.3,DFlash2 z-lab n-max 6 (best on this build)

@@ -17,13 +17,19 @@ pkg=$(ls -1t "$root"/llama.cpp-rocm-dflash2-*.pkg.tar.* | head -1)
 
 zip=$(ls -1t "$root"/dist/llama-*-archlinux-rocm-*.zip | head -1)
 srcinfo="$root/.SRCINFO"
+assets=("$pkg" "$zip" PKGBUILD dflash2.patch "$srcinfo")
+shopt -s nullglob
+for z in "$root"/dist/lemonade/*.zip; do
+  assets+=("$z")
+done
 
 notes="$root/dist/RELEASE_NOTES.md"
 cat > "$notes" <<EOF
 llama.cpp v0.2.0 + DFlash2 (ggml-org/llama.cpp#27342).
 
-HIP for gfx1100;gfx1101;gfx1102;gfx1103 (lemonade gfx110X mapping).
-ROCm is **not** bundled. Install Arch packages \`hip-runtime-amd hipblas rocblas\`.
+HIP fat binary for every lemonade family ISA (gfx103X, gfx110X, gfx1150/1151, gfx120X, gfx90a, gfx908).
+Arch package: ROCm is **not** bundled. Install \`hip-runtime-amd hipblas rocblas\`.
+Ubuntu zips: TheRock HIP is inside each family zip.
 
 n-gram is in 0.2.0. Combine at runtime:
 
@@ -39,13 +45,12 @@ EOF
 
 if gh release view "$tag" >/dev/null 2>&1; then
   echo "release $tag exists, uploading assets"
-  gh release upload "$tag" --clobber \
-    "$pkg" "$zip" PKGBUILD dflash2.patch "$srcinfo"
+  gh release upload "$tag" --clobber "${assets[@]}"
 else
   gh release create "$tag" \
-    --title "$tag (gfx110X, Arch ROCm)" \
+    --title "$tag (all gfx, Arch ROCm + Ubuntu TheRock zips)" \
     --notes-file "$notes" \
-    "$pkg" "$zip" PKGBUILD dflash2.patch "$srcinfo"
+    "${assets[@]}"
 fi
 
 echo "published $tag"

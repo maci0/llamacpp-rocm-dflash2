@@ -17,7 +17,7 @@ fi
 ver="${pkg##*/}"
 ver="${ver#llama.cpp-rocm-dflash2-}"
 ver="${ver%%-x86_64*}"
-family="${AMDGPU_TARGETS:-gfx110X}"
+family="${AMDGPU_TARGETS:-all}"
 case "$family" in
   gfx1100|gfx1101|gfx1102|gfx1103) family=gfx110X ;;
   gfx1100\;gfx1101\;gfx1102\;gfx1103) family=gfx110X ;;

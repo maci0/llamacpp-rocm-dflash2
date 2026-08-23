@@ -2,11 +2,11 @@
 # HIP against Arch ROCm packages. Does not bundle TheRock.
 #
 # CMake flags follow lemonade-sdk/llamacpp-rocm's Ubuntu job where those
-# options exist in v0.2.0. gfx110X maps to gfx1100;gfx1101;gfx1102;gfx1103.
+# options exist in v0.2.0. Default AMDGPU_TARGETS=all is every lemonade ISA.
 
 pkgname=llama.cpp-rocm-dflash2
 pkgver=0.2.0
-pkgrel=2
+pkgrel=3
 pkgdesc='llama.cpp 0.2.0 with DFlash2 speculative decoding, HIP/ROCm (Arch packages)'
 arch=(x86_64)
 url='https://github.com/maci0/llamacpp-rocm-dflash2'
@@ -40,11 +40,15 @@ sha256sums=(
   '2cf79c955e51077ebcaf527d7113d36ee4695e77f22ec1fb5abbc1e5a3dd7256'
 )
 
-# lemonade family names. Override: AMDGPU_TARGETS=gfx103X makepkg
-: "${AMDGPU_TARGETS:=gfx110X}"
+# lemonade families, all ISAs in one fat binary.
+# Override: AMDGPU_TARGETS=gfx110X makepkg
+: "${AMDGPU_TARGETS:=all}"
 
 _map_amdgpu_targets() {
   case "$1" in
+    all)
+      printf '%s' 'gfx1030;gfx1031;gfx1032;gfx1034;gfx1100;gfx1101;gfx1102;gfx1103;gfx1150;gfx1151;gfx1200;gfx1201;gfx90a;gfx908'
+      ;;
     gfx110X) printf '%s' 'gfx1100;gfx1101;gfx1102;gfx1103' ;;
     gfx103X) printf '%s' 'gfx1030;gfx1031;gfx1032;gfx1034' ;;
     gfx120X) printf '%s' 'gfx1200;gfx1201' ;;
