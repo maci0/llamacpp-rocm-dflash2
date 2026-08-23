@@ -1,0 +1,8 @@
+src/
+pkg/
+dist/
+*.pkg.tar.*
+*.log
+.src/
+llama.cpp-*/
+build/
