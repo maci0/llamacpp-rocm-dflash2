@@ -1,12 +1,14 @@
 pkgbase = llama.cpp-rocm-dflash2
 	pkgdesc = llama.cpp 0.2.0 with DFlash2 speculative decoding, HIP/ROCm (Arch packages)
 	pkgver = 0.2.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/maci0/llamacpp-rocm-dflash2
 	arch = x86_64
 	license = MIT
 	makedepends = cmake
 	makedepends = ninja
+	makedepends = nodejs
+	makedepends = npm
 	makedepends = rocm-hip-sdk
 	depends = curl
 	depends = gcc-libs

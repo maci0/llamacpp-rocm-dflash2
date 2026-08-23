@@ -1,0 +1,54 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (empty = pkgver-pkgrel)'
+        required: false
+        default: ''
+
+# HIP compile for four gfx110X targets. No GPU needed at build time.
+# This job is huge (rocm-hip-sdk). Prefer scripts/release.sh on Arch.
+
+jobs:
+  arch-hip:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 180
+    permissions:
+      contents: write
+    steps:
+      - name: Pacman setup
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm --needed \
+            base-devel git github-cli cmake ninja nodejs npm \
+            curl openssl python patchelf zip \
+            rocm-hip-sdk hip-runtime-amd hipblas rocblas
+          useradd -m build
+          echo 'build ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+      - uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: Build, dist, release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chown -R build:build src
+          cd src
+          tag="${{ github.event.inputs.tag }}"
+          if [[ -z "$tag" ]]; then
+            if [[ "${GITHUB_REF_TYPE}" == tag ]]; then
+              tag="${GITHUB_REF_NAME}"
+            else
+              tag=""
+            fi
+          fi
+          sudo -u build -H bash -lc 'export PATH=/usr/bin:$PATH; ./scripts/build.sh && ./scripts/make-dist.sh'
+          if [[ -n "$tag" ]]; then
+            sudo -u build -H bash -lc "export GH_TOKEN='$GH_TOKEN'; ./scripts/release.sh '$tag'"
+          fi

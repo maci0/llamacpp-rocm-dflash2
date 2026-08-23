@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Thin lemonade-style zip: llama.cpp binaries + their own .so files.
-# Does not bundle ROCm. Requires Arch hip-runtime-amd, hipblas, rocblas.
+# Does not bundle ROCm. Needs Arch hip-runtime-amd, hipblas, rocblas.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,14 +10,20 @@ if [[ -z "$pkg" ]]; then
 fi
 if [[ -z "$pkg" || ! -f "$pkg" ]]; then
   echo "usage: $0 <package.pkg.tar.zst>" >&2
-  echo "run makepkg first" >&2
+  echo "run scripts/build.sh first" >&2
   exit 1
 fi
 
 ver="${pkg##*/}"
 ver="${ver#llama.cpp-rocm-dflash2-}"
 ver="${ver%%-x86_64*}"
-out="$root/dist/llama-v${ver}-archlinux-rocm-gfx1100-x64"
+family="${AMDGPU_TARGETS:-gfx110X}"
+case "$family" in
+  gfx1100|gfx1101|gfx1102|gfx1103) family=gfx110X ;;
+  gfx1100\;gfx1101\;gfx1102\;gfx1103) family=gfx110X ;;
+esac
+name="llama-v${ver}-archlinux-rocm-${family}-x64"
+out="$root/dist/$name"
 rm -rf "$out"
 mkdir -p "$out/lib"
 
@@ -43,17 +49,19 @@ if command -v patchelf >/dev/null; then
 fi
 
 cat > "$out/README.txt" <<'EOF'
-llama.cpp 0.2.0 + DFlash2 (PR 27342), HIP build for gfx1100.
+llama.cpp 0.2.0 + DFlash2 (PR 27342), HIP fat binary for gfx110X
+(gfx1100, gfx1101, gfx1102, gfx1103). Same GPU set as lemonade's gfx110X zip.
 
 Needs Arch ROCm packages (not bundled):
   pacman -S hip-runtime-amd hipblas rocblas
 
-Run:
+Run (unset any lemonade LD_LIBRARY_PATH first):
   export LD_LIBRARY_PATH="$PWD/lib:/opt/rocm/lib"
-  ./llama-server -m model.gguf -ngl 99 -fa on \
+  export HIP_VISIBLE_DEVICES=0
+  ./llama-server -m target.gguf -md dflash2.gguf -ngl 99 -fa on \
     --spec-type draft-dflash,ngram-cache --spec-draft-n-max 5
 EOF
 
-(cd "$root/dist" && zip -qr "$(basename "$out").zip" "$(basename "$out")")
-ls -lh "$root/dist/$(basename "$out").zip"
-echo "wrote $root/dist/$(basename "$out").zip"
+(cd "$root/dist" && zip -qr "${name}.zip" "$name")
+ls -lh "$root/dist/${name}.zip"
+echo "wrote $root/dist/${name}.zip"
