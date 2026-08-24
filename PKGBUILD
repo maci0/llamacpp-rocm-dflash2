@@ -6,7 +6,7 @@
 
 pkgname=llama.cpp-rocm-dflash2
 pkgver=0.2.0
-pkgrel=4
+pkgrel=5
 pkgdesc='llama.cpp 0.2.0 with DFlash2 speculative decoding, HIP/ROCm (Arch packages)'
 arch=(x86_64)
 url='https://github.com/maci0/llamacpp-rocm-dflash2'
@@ -30,7 +30,7 @@ makedepends=(
 )
 provides=(llama-cpp llama.cpp)
 conflicts=(llama-cpp llama.cpp llama.cpp-hip)
-options=(!debug !lto)
+options=(strip !debug !lto)
 source=(
   "llama.cpp-${pkgver}.tar.gz::https://github.com/ggml-org/llama.cpp/archive/refs/tags/v${pkgver}.tar.gz"
   dflash2.patch
