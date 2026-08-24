@@ -38,18 +38,18 @@ Raw: [bench/fourway.csv](bench/fourway.csv), [bench/fourway_reps.csv](bench/four
 
 ## TheRock Ubuntu zip (bundled HIP)
 
-Same v0.2.0-4 tree, built in Ubuntu 24.04 Docker with TheRock `gfx110X-all-7.15.0a20260728` next to the binaries. `ldd` does not touch `/opt/rocm`. Four-way is again 3-rep median, n-max 1, quiet-ish CPU (load ~4.6).
+Same v0.2.0-4 tree, built in Ubuntu 24.04 Docker with TheRock `gfx110X-all-7.15.0a20260728` next to the binaries. `ldd` does not touch `/opt/rocm`. Four-way is again 3-rep median, n-max 1, quiet CPU (load 1.4 for lemonade-exact, ~3.5 for previous TheRock).
 
 | config | lemonade b1311 | Arch HIP (system ROCm) | TheRock gfx110X zip |
 | --- | ---: | ---: | ---: |
-| none | 35.2 | 33.9 | **35.6** |
-| MTP n-max 1 | 46.0 | 46.7 | **49.5** |
-| DFlash1 n-max 1 | **41.4** | 35.2 | **42.1** |
+| none | 35.2 | 33.9 | **35.5** |
+| MTP n-max 1 | 46.0 | 46.7 | **49.8** |
+| DFlash1 n-max 1 | **41.4** | 35.2 | **41.4** |
 | DFlash2 n-max 1 | n/a | 32.7 | 31.9 |
 
 ![Arch HIP vs TheRock](bench/fourway_therock.png)
 
-TheRock HIP is the closer match to lemonade on greedy decode (35.6 vs 35.2, +14% pp over the generic-CPU zip). MTP is a bit ahead of both. DFlash1 now matches lemonade at n-max 1 on TheRock after the `CMAKE_SYSTEM_PROCESSOR=x86_64` fix (42.1 vs lemonade 41.4). DFlash2 medians are similar on both stacks. Prompt-eval on TheRock none is 238 t/s vs Arch HIP 236 t/s after the fix (generic-CPU zip was 208 t/s).
+TheRock HIP is the closer match to lemonade on greedy decode (35.5 vs 35.2, +17% pp over the generic-CPU zip). MTP is a bit ahead of both. DFlash1 now matches lemonade at n-max 1 on TheRock (41.4 vs lemonade 41.4) via the lemonade-exact build (`docker/build-one-family.sh` mirrors `lemonade-sdk/llamacpp-rocm` cmake verbatim, `LLAMA_BUILD_BORINGSSL=ON`, `GGML_HIP_ROCWMMA_FATTN=OFF`). DFlash2 medians are similar on both stacks. Prompt-eval on TheRock none is 244 t/s vs Arch HIP 258 t/s (generic-CPU zip was 208 t/s).
 
 One-shot DFlash2 `--spec-draft-n-max 4` on this zip: 40.5 t/s (Arch HIP sweep: 41.1 t/s).
 
@@ -98,7 +98,7 @@ Raw: [bench/results.csv](bench/results.csv). Repro: `./scripts/bench.sh`.
 
 ## Optimizations applied this session (2026-08-24)
 
-**1. TheRock generic-CPU fix — confirmed +14% pp, +5% MTP, +20% DFlash1.** The gfx110X zip was built with empty `CMAKE_SYSTEM_PROCESSOR`, so ggml-cpu fell back to generic x86-64. Setting `-DCMAKE_SYSTEM_PROCESSOR=x86_64` in `docker/build-one-family.sh` and rebuilding (`LEMONADE_FAMILIES=gfx110X ./scripts/build-lemonade-docker.sh`, 2026-08-24 20:18 zip) raised prompt-eval from 208→238 t/s, MTP n-max 1 median 47.3→49.5 t/s (+4.6%), DFlash1 n-max 1 median 35.2→42.1 t/s (+19.6%, now matching lemonade 41.4). Baseline decode 35.5→35.6 t/s. DFlash2 n-max 1 32.7→31.9 t/s is within noise (first rep cold start 12.9). Repro: `DIST=dist/lemonade/... TAG=therock ./scripts/fourway.sh` (3 reps).
+**1. Lemonade-exact Ubuntu build — v0.2.0 + DFlash2 patch on lemonade's cmake.** `docker/build-one-family.sh` now mirrors `lemonade-sdk/llamacpp-rocm/.github/workflows/build-llamacpp-rocm.yml` verbatim (TheRock `gfx110X-all-7.15.0a20260728`, `LLAMA_BUILD_BORINGSSL=ON`, `GGML_HIP_ROCWMMA_FATTN=OFF`, `CMAKE_CROSSCOMPILING=ON`). Quiet-CPU four-way (load 1.4, 3 reps, `DIST=dist/lemonade/llama-v0.2.0-ubuntu24.04-rocm-gfx110X-x64 TAG=lemonade-exact`, 2026-08-24 22:29, 494M zip): none 35.5/244, MTP 49.8/207, DFlash1 41.4/16, DFlash2 31.5/31 — vs previous `x86_64`-patched build 35.6/49.5/42.1 (load 3.5) the decode delta is within 1% noise; vs generic-CPU zip (pp 208) the gain is +17% pp and DFlash1 now matches lemonade 41.4. Repro: `LEMONADE_FAMILIES=gfx110X ./scripts/build-lemonade-docker.sh && DIST=dist/lemonade/llama-v0.2.0-ubuntu24.04-rocm-gfx110X-x64 ENGINE='v0.2.0 lemonade-exact gfx110X' TAG=lemonade-exact ./scripts/fourway.sh`.
 
 **2. Runtime tuning — MTP n-max 2 is the fastest decode on this GPU.** Quick sweep on the fixed TheRock zip (noisy CPU, load 8–14): `b4096/ub2048/t16` beats `b2048/ub1024` for none (34.7 vs 30.8 t/s) and MTP (47.3 vs 45.9). `t8` slightly beats `t16` for none (35.3 vs 34.7). MTP n-max 2 hits 50.7 t/s (Generation line) vs n-max 1 47.3 on the same binary — consistent with `bench.sh` where MTP n-max 2 is 47.4–48.9 t/s. `-fa off` fails with `q4_0` KV (requires flash-attn), so `-fa on` is mandatory with this recipe. Recommended fastest: `--spec-type draft-mtp --spec-draft-n-max 2` on TheRock zip; DFlash2 best remains n-max 4 (41.1 t/s Arch, 40.5 TheRock, single-shot).
 

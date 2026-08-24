@@ -54,32 +54,26 @@ patch -d /tmp/llama.cpp-${ver} -p1 < "$src/dflash2.patch"
 build=/tmp/build-$fam
 rm -rf "$build"
 
+# Exact lemonade Ubuntu flags, plus patch on v0.2.0.
+# https://github.com/lemonade-sdk/llamacpp-rocm/blob/main/.github/workflows/build-llamacpp-rocm.yml
 cmake -S /tmp/llama.cpp-${ver} -B "$build" -G Ninja \
-  -DCMAKE_C_COMPILER="$clang" \
-  -DCMAKE_CXX_COMPILER="$clangxx" \
+  -DCMAKE_C_COMPILER=/opt/rocm/llvm/bin/clang \
+  -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/clang++ \
   -DCMAKE_CXX_FLAGS="-I/opt/rocm/include" \
-  -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CROSSCOMPILING=ON \
   -DCMAKE_SYSTEM_NAME=Linux \
-  -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DGPU_TARGETS="$targets" \
   -DBUILD_SHARED_LIBS=ON \
-  -DGGML_STATIC=OFF \
   -DLLAMA_BUILD_TESTS=OFF \
-  -DLLAMA_BUILD_EXAMPLES=OFF \
-  -DLLAMA_BUILD_TOOLS=ON \
-  -DLLAMA_BUILD_SERVER=ON \
-  -DLLAMA_BUILD_UI=ON \
-  -DLLAMA_USE_PREBUILT_UI=ON \
-  -DLLAMA_OPENSSL=ON \
-  -DLLAMA_USE_SYSTEM_GGML=OFF \
-  -DGGML_RPC=ON \
   -DGGML_HIP=ON \
   -DGGML_OPENMP=OFF \
   -DGGML_CUDA_FORCE_CUBLAS=OFF \
+  -DGGML_RPC=ON \
+  -DGGML_HIP_ROCWMMA_FATTN=OFF \
+  -DLLAMA_BUILD_BORINGSSL=ON \
   -DGGML_NATIVE=OFF \
-  -DHIP_PLATFORM=amd \
-  -DGPU_TARGETS="$targets" \
-  -DLLAMA_BUILD_NUMBER=200 \
+  -DGGML_STATIC=OFF \
   -Wno-dev
 
 cmake --build "$build" --parallel "$(nproc)"
