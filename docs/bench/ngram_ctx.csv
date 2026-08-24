@@ -1,0 +1,9 @@
+label,spec,ctx,tg_tps,pp_tps,reps,rc
+none_c512,none,512,32.60,135.10,3,0/0/0
+ngram_cache_c512,ngram-cache,512,25.30,193.50,3,0/0/0
+none_c1024,none,1024,28.70,205.70,3,0/0/0
+ngram_cache_c1024,ngram-cache,1024,25.50,188.10,3,0/0/0
+none_c2048,none,2048,30.60,99.50,3,0/0/0
+ngram_cache_c2048,ngram-cache,2048,19.60,148.70,3,0/0/0
+none_c4096,none,4096,29.50,155.10,3,0/0/0
+ngram_cache_c4096,ngram-cache,4096,16.40,135.60,3,0/0/0

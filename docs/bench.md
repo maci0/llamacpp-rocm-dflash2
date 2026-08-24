@@ -42,14 +42,14 @@ Same v0.2.0-4 tree, built in Ubuntu 24.04 Docker with TheRock `gfx110X-all-7.15.
 
 | config | lemonade b1311 | Arch HIP (system ROCm) | TheRock gfx110X zip |
 | --- | ---: | ---: | ---: |
-| none | 35.2 | 33.9 | **35.5** |
-| MTP n-max 1 | 46.0 | 46.7 | **47.3** |
-| DFlash1 n-max 1 | **41.4** | 35.2 | 35.2 |
-| DFlash2 n-max 1 | n/a | 32.7 | 32.7 |
+| none | 35.2 | 33.9 | **35.6** |
+| MTP n-max 1 | 46.0 | 46.7 | **49.5** |
+| DFlash1 n-max 1 | **41.4** | 35.2 | **42.1** |
+| DFlash2 n-max 1 | n/a | 32.7 | 31.9 |
 
 ![Arch HIP vs TheRock](bench/fourway_therock.png)
 
-TheRock HIP is the closer match to lemonade on greedy decode (35.5 vs 35.2). MTP is a bit ahead of both. DFlash1/DFlash2 medians match Arch HIP; lemonade's DFlash1 (41.4) is still the outlier. Prompt-eval on TheRock none is 208 t/s vs Arch HIP 236 t/s (this zip's CPU backend was generic; `CMAKE_SYSTEM_PROCESSOR=x86_64` is now set for the next Docker build).
+TheRock HIP is the closer match to lemonade on greedy decode (35.6 vs 35.2, +14% pp over the generic-CPU zip). MTP is a bit ahead of both. DFlash1 now matches lemonade at n-max 1 on TheRock after the `CMAKE_SYSTEM_PROCESSOR=x86_64` fix (42.1 vs lemonade 41.4). DFlash2 medians are similar on both stacks. Prompt-eval on TheRock none is 238 t/s vs Arch HIP 236 t/s after the fix (generic-CPU zip was 208 t/s).
 
 One-shot DFlash2 `--spec-draft-n-max 4` on this zip: 40.5 t/s (Arch HIP sweep: 41.1 t/s).
 
@@ -95,6 +95,14 @@ DFlash2 peaks at n-max 4 (41.1 t/s). MTP n-max 2 is 47.4 t/s. `draft-dflash,ngra
 DFlash2 n-max 7 is the training `block_size - 1`. The n-max 1 VRAM sample (1609 MiB) was taken before both models finished loading; later DFlash2 rows sit around 22–23 GiB.
 
 Raw: [bench/results.csv](bench/results.csv). Repro: `./scripts/bench.sh`.
+
+## Optimizations applied this session (2026-08-24)
+
+**1. TheRock generic-CPU fix — confirmed +14% pp, +5% MTP, +20% DFlash1.** The gfx110X zip was built with empty `CMAKE_SYSTEM_PROCESSOR`, so ggml-cpu fell back to generic x86-64. Setting `-DCMAKE_SYSTEM_PROCESSOR=x86_64` in `docker/build-one-family.sh` and rebuilding (`LEMONADE_FAMILIES=gfx110X ./scripts/build-lemonade-docker.sh`, 2026-08-24 20:18 zip) raised prompt-eval from 208→238 t/s, MTP n-max 1 median 47.3→49.5 t/s (+4.6%), DFlash1 n-max 1 median 35.2→42.1 t/s (+19.6%, now matching lemonade 41.4). Baseline decode 35.5→35.6 t/s. DFlash2 n-max 1 32.7→31.9 t/s is within noise (first rep cold start 12.9). Repro: `DIST=dist/lemonade/... TAG=therock ./scripts/fourway.sh` (3 reps).
+
+**2. Runtime tuning — MTP n-max 2 is the fastest decode on this GPU.** Quick sweep on the fixed TheRock zip (noisy CPU, load 8–14): `b4096/ub2048/t16` beats `b2048/ub1024` for none (34.7 vs 30.8 t/s) and MTP (47.3 vs 45.9). `t8` slightly beats `t16` for none (35.3 vs 34.7). MTP n-max 2 hits 50.7 t/s (Generation line) vs n-max 1 47.3 on the same binary — consistent with `bench.sh` where MTP n-max 2 is 47.4–48.9 t/s. `-fa off` fails with `q4_0` KV (requires flash-attn), so `-fa on` is mandatory with this recipe. Recommended fastest: `--spec-type draft-mtp --spec-draft-n-max 2` on TheRock zip; DFlash2 best remains n-max 4 (41.1 t/s Arch, 40.5 TheRock, single-shot).
+
+**3. Platform-native CPU (GGML_NATIVE=ON) — deferred, requires quiet-CPU rebench.** The 9950X exposes AVX512F/BF16/VBMI/VNNI, AVX_VNNI, BMI2, FMA. `PKGBUILD` currently sets `GGML_NATIVE=OFF` so all `GGML_AVX*` default OFF; `-march=native` from `makepkg.conf` still reaches the compiler, but ggml-cpu gates optimized kernels on `GGML_SSE42`/`GGML_AVX*` defines — CPU backend compiles generic. A rebuild with `GGML_NATIVE=ON` (or explicit `GGML_AVX512=ON` etc.) + narrowed `AMDGPU_TARGETS=gfx1100` was attempted but the four-way ran under load 40 (mtp 37.8 vs 45.7, inconclusive). Hypothesis: CPU sampling/speculation should gain, decode is HIP-bound so the upside is modest. To validate: set `GGML_NATIVE=ON` in `PKGBUILD` (and `docker/build-one-family.sh`), rebuild both stacks when load ~2, re-run `./scripts/fourway.sh` + `./scripts/bench.sh`, compare median tg_tps ≥2% gate. Narrowing `gfx1100` also drops fat-binary HIP compile time and may reduce code size.
 
 ## Reproduce
 

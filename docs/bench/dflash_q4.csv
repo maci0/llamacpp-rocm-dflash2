@@ -1,0 +1,6 @@
+label,engine,tg_tps,pp_tps,accept,reps,rc
+none,v0.2.0 HIP,23.80,108.20,,3,0/0/0
+mtp_nm1,v0.2.0 HIP,20.80,46.70,,3,0/0/0
+dflash2_q8_nm1,v0.2.0 HIP,18.20,10.10,,3,0/0/0
+dflash2_q4_nm1,v0.2.0 HIP,8.40,6.90,,3,0/0/0
+dflash2_q4_nm7,v0.2.0 HIP,4.50,2.10,,3,0/0/0

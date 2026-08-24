@@ -1,0 +1,16 @@
+label,rep,tg_tps,pp_tps,accept,rc
+none,1,23.8,85.7,,0
+none,2,25.3,108.2,,0
+none,3,23.2,114.3,,0
+mtp_nm1,1,31.0,46.7,,0
+mtp_nm1,2,19.2,49.1,,0
+mtp_nm1,3,20.8,42.2,,0
+dflash2_q8_nm1,1,19.0,10.1,,0
+dflash2_q8_nm1,2,18.2,24.1,,0
+dflash2_q8_nm1,3,5.0,3.1,,0
+dflash2_q4_nm1,1,3.5,1.8,,0
+dflash2_q4_nm1,2,8.4,7.6,,0
+dflash2_q4_nm1,3,15.7,6.9,,0
+dflash2_q4_nm7,1,3.4,1.9,,0
+dflash2_q4_nm7,2,4.5,2.1,,0
+dflash2_q4_nm7,3,11.1,8.4,,0
