@@ -7,25 +7,29 @@ llama.cpp **v0.2.0** + [DFlash2](https://github.com/ggml-org/llama.cpp/pull/2734
 [![DFlash2](https://img.shields.io/badge/spec-DFlash2-7c3aed)](https://github.com/ggml-org/llama.cpp/pull/27342)
 
 ```text
---spec-type draft-dflash,ngram-cache --spec-draft-n-max 5
+--spec-type draft-dflash --spec-draft-n-max 4
 ```
 
-## Before vs after
+## Baseline vs MTP vs DFlash vs DFlash2
 
-Same box (RX 7900 XTX, Qwen3.8-27B Q4_K_M, flash-attn, q4_0 KV, ctx 4096, n=256, greedy). Left: lemonade **b1311**. Right: this **v0.2.0 + DFlash2** HIP build.
+Same box (RX 7900 XTX, gfx1100, 24 GB, Qwen3.8-27B Q4_K_M, flash-attn, q4_0 KV, ctx 4096, n=256, greedy). Spec paths use `--spec-draft-n-max 1`. This-build numbers are the median of 3 reps on **v0.2.0-4** (PR 27342 `@ d1a522fc`).
 
-![before vs after](docs/bench/before_after.png)
+![four-way](docs/bench/fourway.png)
 
-| | lemonade b1311 | this build |
-| --- | ---: | ---: |
-| none | 35.2 t/s | 18.6 t/s |
-| ngram-simple 16/8 | 35.2 t/s | 28.4 t/s |
-| **MTP n-max 1** | **46.0 t/s** | **30.1 t/s** |
-| DFlash | 41.4 t/s (v1 bootstrap) | 15.3 t/s (z-lab v2, best n-max) |
+![four-way vs lemonade](docs/bench/fourway_engines.png)
 
-MTP n-max 1 still wins on both engines. DFlash2 runs here; it does not beat MTP on this GPU/quant yet. Full tables and notes: [docs/bench.md](docs/bench.md).
+| | lemonade b1311 | this build | vs this baseline |
+| --- | ---: | ---: | ---: |
+| none | 35.2 t/s | 33.9 t/s | 1.00x |
+| **MTP n-max 1** | **46.0 t/s** | **46.7 t/s** | **1.38x** |
+| DFlash1 bootstrap n-max 1 | 41.4 t/s | 35.2 t/s | 1.04x |
+| DFlash2 z-lab n-max 1 | n/a | 32.7 t/s | 0.96x |
+
+MTP still wins. Quiet-CPU HIP now matches lemonade on none and slightly beats it on MTP. Neither DFlash draft beats MTP at n-max 1. DFlash2 n-max 1 is a hair under this baseline; the n-max sweep peaks at n-max 4 (41.1 t/s, single shot). Full tables: [docs/bench.md](docs/bench.md).
 
 ## Speculative sweep (this build)
+
+Single-shot n-max sweep on the same v0.2.0-4 binary, quiet CPU. DFlash2's best point is n-max 4 (41.1 t/s). MTP n-max 2 is 47.4 t/s. Adding ngram-cache on top of DFlash2 does not help.
 
 ![decode by config](docs/bench/tg_by_config.png)
 
@@ -43,7 +47,7 @@ From a clone: `paru -Bi .` or `makepkg -si`.
 
 Default `AMDGPU_TARGETS=all` (every lemonade family ISA in one fat binary). Thinner: `AMDGPU_TARGETS=gfx110X makepkg -si`.
 
-**Ubuntu lemonade-style zips** (TheRock HIP inside the zip, one archive per family): `scripts/build-lemonade-docker.sh` on Ubuntu 24.04.
+**Ubuntu lemonade-style zips** (TheRock HIP inside the zip, one archive per family): `LEMONADE_FAMILIES=gfx110X ./scripts/build-lemonade-docker.sh`. Run from the unzipped folder with `unset LD_LIBRARY_PATH`; do not point at `/opt/rocm`. On this 7900 XTX the gfx110X zip matches lemonade on none and slightly beats it on MTP. Numbers: [docs/bench.md](docs/bench.md).
 
 ## Run
 
@@ -55,11 +59,11 @@ llama-server \
   -md Qwen3.8-27B-DFlash2-z-lab-Q8_0.gguf \
   -c 4096 -ngl 99 -fa on -ctk q4_0 -ctv q4_0 \
   -b 4096 -ub 2048 -t 16 \
-  --spec-type draft-dflash,ngram-cache --spec-draft-n-max 5 \
+  --spec-type draft-dflash --spec-draft-n-max 4 \
   --host 0.0.0.0 --port 8080
 ```
 
-Self-MTP (no extra draft): `--spec-type draft-mtp --spec-draft-n-max 1`.
+Fastest on this GPU: `--spec-type draft-mtp --spec-draft-n-max 1` (or 2). `ngram-cache` stacked on DFlash2 did not help.
 
 The GGUF architecture selects DFlash2. There is no `draft-dflash2` flag.
 
@@ -81,11 +85,13 @@ flowchart LR
 
 ## SPEED-Bench
 
+Not re-run on v0.2.0-4.
+
 ```bash
 SPEED_BENCH_LIMIT=16 ./scripts/run-speed-bench.sh
 ```
 
-Uses [nvidia/SPEED-Bench](https://huggingface.co/datasets/nvidia/SPEED-Bench) qualitative split against `llama-server`.
+[nvidia/SPEED-Bench](https://huggingface.co/datasets/nvidia/SPEED-Bench) qualitative split against `llama-server`. DFlash2 uses `--spec-draft-n-max 4`.
 
 ## What this is not
 

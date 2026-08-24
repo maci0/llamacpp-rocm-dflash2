@@ -9,6 +9,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dist=""
 for d in \
+  "$root/dist/llama-v0.2.0-4-archlinux-rocm-all-x64" \
   "$root/dist/llama-v0.2.0-2-archlinux-rocm-gfx110X-x64" \
   "$root/dist/llama-v0.2.0-1-archlinux-rocm-gfx110X-x64"
 do
@@ -147,7 +148,7 @@ run_client mtp
 if [[ -f "$DFLASH2" ]]; then
   start_server dflash2 \
     --spec-type draft-dflash \
-    --model-draft "$DFLASH2" -ngld 99 --spec-draft-n-max 5
+    --model-draft "$DFLASH2" -ngld 99 --spec-draft-n-max 4
   run_client dflash2
 else
   echo "missing $DFLASH2, skip dflash2" | tee -a "$outdir/run.log"

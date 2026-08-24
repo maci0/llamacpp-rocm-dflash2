@@ -61,6 +61,7 @@ cmake -S /tmp/llama.cpp-${ver} -B "$build" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CROSSCOMPILING=ON \
   -DCMAKE_SYSTEM_NAME=Linux \
+  -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
   -DBUILD_SHARED_LIBS=ON \
   -DGGML_STATIC=OFF \
   -DLLAMA_BUILD_TESTS=OFF \
@@ -107,7 +108,7 @@ TheRock HIP is inside this folder ($therock_ver). No system ROCm needed.
   unset LD_LIBRARY_PATH LIBRARY_PATH
   export HIP_VISIBLE_DEVICES=0
   ./llama-server -m target.gguf -md dflash2.gguf -ngl 99 -fa on \\
-    --spec-type draft-dflash,ngram-cache --spec-draft-n-max 5
+    --spec-type draft-dflash --spec-draft-n-max 4
 EOF
 
 name="llama-v${ver}-ubuntu24.04-rocm-${fam}-x64"

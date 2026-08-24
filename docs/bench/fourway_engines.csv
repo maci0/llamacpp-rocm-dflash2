@@ -1,0 +1,12 @@
+engine,label,tg_tps,notes
+lemonade b1311,none,35.23,single shot qwenspeed p5
+lemonade b1311,MTP n-max 1,45.98,single shot qwenspeed p5
+lemonade b1311,DFlash1 n-max 1,41.37,bootstrap Q8_0 n-max 1
+v0.2.0-4 HIP,none,33.90,median of 3
+v0.2.0-4 HIP,MTP n-max 1,46.70,median of 3
+v0.2.0-4 HIP,DFlash1 n-max 1,35.20,bootstrap Q8_0 n-max 1 median of 3
+v0.2.0-4 HIP,DFlash2 n-max 1,32.70,z-lab Q8_0 n-max 1 median of 3
+v0.2.0-4 TheRock gfx110X,none,35.50,median of 3 Ubuntu zip bundled HIP
+v0.2.0-4 TheRock gfx110X,MTP n-max 1,47.30,median of 3
+v0.2.0-4 TheRock gfx110X,DFlash1 n-max 1,35.20,bootstrap Q8_0 n-max 1 median of 3
+v0.2.0-4 TheRock gfx110X,DFlash2 n-max 1,32.70,z-lab Q8_0 n-max 1 median of 3

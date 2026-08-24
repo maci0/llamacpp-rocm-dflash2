@@ -58,7 +58,7 @@ Run (unset any lemonade LD_LIBRARY_PATH first):
   export LD_LIBRARY_PATH="\$PWD/lib:/opt/rocm/lib"
   export HIP_VISIBLE_DEVICES=0
   ./llama-server -m target.gguf -md dflash2.gguf -ngl 99 -fa on \\
-    --spec-type draft-dflash,ngram-cache --spec-draft-n-max 5
+    --spec-type draft-dflash --spec-draft-n-max 4
 EOF
 
 (cd "$root/dist" && zip -qr "${name}.zip" "$name")

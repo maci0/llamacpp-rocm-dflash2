@@ -8,6 +8,7 @@ set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dist=""
 for d in \
+  "$root/dist/llama-v0.2.0-4-archlinux-rocm-all-x64" \
   "$root/dist/llama-v0.2.0-2-archlinux-rocm-gfx110X-x64" \
   "$root/dist/llama-v0.2.0-1-archlinux-rocm-gfx110X-x64"
 do
@@ -29,7 +30,8 @@ echo "label,spec,n_max,tg_tps,pp_tps,accept,vram_mib,rc,notes" > "$csv"
 : > "$outdir/run.log"
 
 export HIP_VISIBLE_DEVICES=0
-unset LIBRARY_PATH
+export HIP_VISIBLE_DEVICES=0
+unset LIBRARY_PATH LD_LIBRARY_PATH
 export LD_LIBRARY_PATH="$dist/lib:/opt/rocm/lib"
 
 PROMPT='The history of the Roman Empire spans over a millennium. It began in 753 BC with the founding of Rome and ended in 476 AD when the last western emperor was deposed. The empire was known for its engineering, law, and military discipline. Roads, aqueducts, and concrete revolutionized construction across the ancient world.'
@@ -135,7 +137,7 @@ run() {
     notes="oom"
     rc=137
   fi
-  echo "$label,$spec,$nmax,${tg},${pp},${acc},${peak},${rc},${notes}" | tee -a "$csv"
+  echo "$label,\"$spec\",$nmax,${tg},${pp},${acc},${peak},${rc},${notes}" | tee -a "$csv"
   if [[ "$notes" == oom ]]; then
     return 3
   fi

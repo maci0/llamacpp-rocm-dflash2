@@ -37,16 +37,16 @@ HIP fat binary for every lemonade family ISA (gfx103X, gfx110X, gfx1150/1151, gf
 Arch package: ROCm is **not** bundled. Install \`hip-runtime-amd hipblas rocblas\`.
 ${ubuntu_note}
 
-n-gram is in 0.2.0. Combine at runtime:
+On an RX 7900 XTX, DFlash2 peaks at \`--spec-draft-n-max 4\`. MTP is still faster. Stacking \`ngram-cache\` on DFlash2 did not help.
 
 \`\`\`
---spec-type draft-dflash,ngram-cache --spec-draft-n-max 5 -md Qwen3.8-27B-DFlash2-Q4_K_M.gguf
+--spec-type draft-dflash --spec-draft-n-max 4 -md Qwen3.8-27B-DFlash2-z-lab-Q8_0.gguf
 \`\`\`
 
 Assets:
-- \`.pkg.tar.zst\` — \`pacman -U\` / \`yay -U\` / \`paru -U\`
-- lemonade-layout zip — binaries + libggml/libllama only
-- \`PKGBUILD\`, \`dflash2.patch\`, \`.SRCINFO\` — rebuild from source
+- \`.pkg.tar.zst\`: \`pacman -U\` / \`yay -U\` / \`paru -U\`
+- lemonade-layout zip: binaries + libggml/libllama only
+- \`PKGBUILD\`, \`dflash2.patch\`, \`.SRCINFO\`: rebuild from source
 EOF
 
 sums="$root/dist/SHA256SUMS"

@@ -5,6 +5,9 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
@@ -61,6 +64,16 @@ def color_for(spec: str) -> str:
     return "#dc2626"
 
 
+def savefig(fig, stem: str, *aliases: str) -> None:
+    fig.savefig(out / f"{stem}.svg")
+    fig.savefig(out / f"{stem}.png", dpi=150)
+    for a in aliases:
+        if a == stem:
+            continue
+        fig.savefig(out / f"{a}.svg")
+        fig.savefig(out / f"{a}.png", dpi=150)
+
+
 def load_after() -> list[dict]:
     rows = []
     with (out / "results.csv").open() as f:
@@ -99,7 +112,7 @@ def plot_after(rows: list[dict]) -> None:
     annotate(ax, bars)
     ax.set_ylabel("decode tok/s")
     ax.set_title(
-        "v0.2.0 + DFlash2 HIP  |  Qwen3.8-27B Q4_K_M  |  RX 7900 XTX  |  ctx 4096, n=256, greedy"
+        "v0.2.0-4 HIP  |  Qwen3.8-27B Q4_K_M  |  RX 7900 XTX  |  ctx 4096, n=256, greedy"
     )
     ax.tick_params(axis="x", rotation=40, labelsize=8)
     ax.set_ylim(0, max(tgs) * 1.18)
@@ -117,8 +130,7 @@ def plot_after(rows: list[dict]) -> None:
         fontsize=8,
     )
     fig.tight_layout()
-    fig.savefig(out / "tg_by_config.svg")
-    fig.savefig(out / "tg_by_config.png", dpi=150)
+    savefig(fig, "tg_by_config", "tg_by_config")
     plt.close()
 
 
@@ -134,15 +146,173 @@ def plot_nmax(rows: list[dict]) -> None:
         if not pts:
             continue
         pts.sort()
-        ax.plot([p[0] for p in pts], [p[1] for p in pts], marker="o", color=color, label=name, lw=2)
+        xs = [p[0] for p in pts]
+        ys = [p[1] for p in pts]
+        ax.plot(xs, ys, marker="o", color=color, label=name, lw=2)
+        if spec == "draft-dflash" and ys:
+            i = ys.index(max(ys))
+            ax.annotate(
+                f"{ys[i]:.1f}",
+                xy=(xs[i], ys[i]),
+                xytext=(0, 8),
+                textcoords="offset points",
+                ha="center",
+                fontsize=8,
+                color=color,
+            )
     ax.set_xlabel("--spec-draft-n-max")
     ax.set_ylabel("decode tok/s")
-    ax.set_title("n-max sweep on v0.2.0 HIP (same model / GPU / recipe)")
+    ax.set_title("n-max sweep on v0.2.0-4 HIP (same model / GPU / recipe)")
     ax.set_xticks(range(1, 8))
     ax.legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(out / "nmax_sweep.svg")
-    fig.savefig(out / "nmax_sweep.png", dpi=150)
+    savefig(fig, "nmax_sweep", "nmax_sweep")
+    plt.close()
+
+
+FOURWAY_LABELS = {
+    "baseline": "none",
+    "mtp": "MTP n-max 1",
+    "dflash1": "DFlash1 n-max 1",
+    "dflash2": "DFlash2 n-max 1",
+}
+
+FOURWAY_COLORS = {
+    "baseline": "#64748b",
+    "mtp": "#2563eb",
+    "dflash1": "#d97706",
+    "dflash2": "#dc2626",
+}
+
+
+def load_fourway() -> list[dict]:
+    path = out / "fourway.csv"
+    if not path.exists():
+        return []
+    rows = []
+    with path.open() as f:
+        for r in csv.DictReader(f):
+            try:
+                r["tg"] = float(r["tg_tps"])
+            except (TypeError, ValueError):
+                continue
+            rows.append(r)
+    return rows
+
+
+def plot_fourway(rows: list[dict]) -> None:
+    order = ["baseline", "mtp", "dflash1", "dflash2"]
+    by = {r["label"]: r for r in rows}
+    labels = [FOURWAY_LABELS[k] for k in order if k in by]
+    tgs = [by[k]["tg"] for k in order if k in by]
+    colors = [FOURWAY_COLORS[k] for k in order if k in by]
+    fig, ax = plt.subplots(figsize=(8.4, 4.8))
+    bars = ax.bar(labels, tgs, color=colors, width=0.62, zorder=3)
+    annotate(ax, bars)
+    ax.set_ylabel("decode tok/s")
+    ax.set_title(
+        "v0.2.0-4 HIP  |  baseline vs MTP vs DFlash1 vs DFlash2\n"
+        "Qwen3.8-27B Q4_K_M  |  RX 7900 XTX  |  ctx 4096, n=256, greedy, n-max 1, median of 3"
+    )
+    ax.set_ylim(0, max(tgs) * 1.22)
+    fig.tight_layout()
+    savefig(fig, "fourway")
+    plt.close()
+
+
+def plot_fourway_engines() -> None:
+    path = out / "fourway_engines.csv"
+    if not path.exists():
+        return
+    by_engine: dict[str, dict[str, float]] = {}
+    with path.open() as f:
+        for r in csv.DictReader(f):
+            if not r.get("tg_tps"):
+                continue
+            by_engine.setdefault(r["engine"], {})[r["label"]] = float(r["tg_tps"])
+    labels = ["none", "MTP n-max 1", "DFlash1 n-max 1", "DFlash2 n-max 1"]
+    keys = ["none", "MTP n-max 1", "DFlash1 n-max 1", "DFlash2 n-max 1"]
+    engines = list(by_engine)
+    x = list(range(len(labels)))
+    n = max(len(engines), 1)
+    width = min(0.36, 0.8 / n)
+    colors = ["#94a3b8", "#f97316", "#0d9488"]
+    fig, ax = plt.subplots(figsize=(10.4, 4.8))
+    ymax = 1.0
+    for i, eng in enumerate(engines):
+        vals = [by_engine[eng].get(k, 0.0) for k in keys]
+        ymax = max(ymax, max(vals, default=0.0))
+        positions = [xi + (i - (n - 1) / 2) * width for xi in x]
+        bars = ax.bar(positions, vals, width=width, color=colors[i % len(colors)], label=eng, zorder=3)
+        for bar, v in zip(bars, vals):
+            if v <= 0:
+                bar.set_height(0)
+                ax.annotate(
+                    "n/a",
+                    xy=(bar.get_x() + bar.get_width() / 2, 1.2),
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                    color="#94a3b8",
+                )
+                continue
+            ax.annotate(
+                f"{v:.1f}",
+                xy=(bar.get_x() + bar.get_width() / 2, v),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                color="#0f172a",
+            )
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=9)
+    ax.set_ylabel("decode tok/s")
+    ax.set_title("Same recipe, three engines  |  ctx 4096, n=256, greedy, n-max 1")
+    ax.legend(frameon=False)
+    ax.set_ylim(0, ymax * 1.18)
+    fig.tight_layout()
+    savefig(fig, "fourway_engines")
+    plt.close()
+
+
+def plot_fourway_therock() -> None:
+    hip = out / "fourway.csv"
+    rock = out / "fourway_therock.csv"
+    if not hip.exists() or not rock.exists():
+        return
+    by_engine: dict[str, dict[str, float]] = {}
+    for path in (hip, rock):
+        with path.open() as f:
+            for r in csv.DictReader(f):
+                try:
+                    by_engine.setdefault(r["engine"], {})[r["label"]] = float(r["tg_tps"])
+                except (TypeError, ValueError, KeyError):
+                    continue
+    labels = ["none", "MTP n-max 1", "DFlash1 n-max 1", "DFlash2 n-max 1"]
+    keys = ["baseline", "mtp", "dflash1", "dflash2"]
+    engines = list(by_engine)
+    x = list(range(len(labels)))
+    n = max(len(engines), 1)
+    width = min(0.36, 0.8 / n)
+    colors = ["#f97316", "#0d9488"]
+    fig, ax = plt.subplots(figsize=(9.6, 4.8))
+    ymax = 1.0
+    for i, eng in enumerate(engines):
+        vals = [by_engine[eng].get(k, 0.0) for k in keys]
+        ymax = max(ymax, max(vals, default=0.0))
+        positions = [xi + (i - (n - 1) / 2) * width for xi in x]
+        bars = ax.bar(positions, vals, width=width, color=colors[i % len(colors)], label=eng, zorder=3)
+        annotate(ax, bars)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=9)
+    ax.set_ylabel("decode tok/s")
+    ax.set_title("Arch HIP (system ROCm) vs TheRock gfx110X zip  |  n-max 1, median of 3")
+    ax.legend(frameon=False)
+    ax.set_ylim(0, ymax * 1.18)
+    fig.tight_layout()
+    savefig(fig, "fourway_therock")
     plt.close()
 
 
@@ -171,23 +341,26 @@ def plot_before_after() -> None:
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=9)
     ax.set_ylabel("decode tok/s")
-    ax.set_title("Before vs after  |  same machine, ctx 4096, n=256, greedy, Q4_K_M + FA + q4_0 KV")
+    ax.set_title("lemonade vs this HIP  |  same machine, ctx 4096, n=256, greedy, Q4_K_M + FA + q4_0 KV")
     ax.legend(frameon=False)
     ax.set_ylim(0, 55)
     fig.tight_layout()
-    fig.savefig(out / "before_after.svg")
-    fig.savefig(out / "before_after.png", dpi=150)
+    savefig(fig, "before_after")
     plt.close()
 
 
 def main() -> None:
     rows = load_after()
-    if not rows:
-        raise SystemExit(f"no successful rows in {out / 'results.csv'}")
-    plot_after(rows)
-    plot_nmax(rows)
+    if rows:
+        plot_after(rows)
+        plot_nmax(rows)
     plot_before_after()
-    print(f"wrote {out}/tg_by_config.png, nmax_sweep.png, before_after.png")
+    four = load_fourway()
+    if four:
+        plot_fourway(four)
+    plot_fourway_engines()
+    plot_fourway_therock()
+    print(f"wrote charts under {out}")
 
 
 if __name__ == "__main__":
