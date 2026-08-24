@@ -1,5 +1,0 @@
-label,engine,tg_tps,pp_tps,accept,reps,rc
-baseline,v0.2.0-4 HIP,33.50,258.10,,3,0/0/0
-mtp,v0.2.0-4 HIP,45.70,88.70,,3,0/0/0
-dflash1,v0.2.0-4 HIP,35.40,20.30,,3,0/0/0
-dflash2,v0.2.0-4 HIP,30.90,19.20,,3,0/0/0
