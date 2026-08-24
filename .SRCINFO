@@ -1,7 +1,7 @@
 pkgbase = llama.cpp-rocm-dflash2
 	pkgdesc = llama.cpp 0.2.0 with DFlash2 speculative decoding, HIP/ROCm (Arch packages)
 	pkgver = 0.2.0
-	pkgrel = 3
+	pkgrel = 4
 	url = https://github.com/maci0/llamacpp-rocm-dflash2
 	arch = x86_64
 	license = MIT
@@ -28,6 +28,6 @@ pkgbase = llama.cpp-rocm-dflash2
 	source = llama.cpp-0.2.0.tar.gz::https://github.com/ggml-org/llama.cpp/archive/refs/tags/v0.2.0.tar.gz
 	source = dflash2.patch
 	sha256sums = 72e6c3e70c584f84e61697e449ee388f43458d662ef8f3bd3f6b4a054c947958
-	sha256sums = 2cf79c955e51077ebcaf527d7113d36ee4695e77f22ec1fb5abbc1e5a3dd7256
+	sha256sums = b5749dc1893252b6f4fb0ef62b6c8b1456718a1df0857b8232b4456fed50d952
 
 pkgname = llama.cpp-rocm-dflash2

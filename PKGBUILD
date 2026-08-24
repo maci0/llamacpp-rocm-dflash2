@@ -1,4 +1,4 @@
-# llama.cpp v0.2.0 + DFlash2 (ggml-org/llama.cpp#27342)
+# llama.cpp v0.2.0 + DFlash2 (ggml-org/llama.cpp#27342 @ d1a522fc)
 # HIP against Arch ROCm packages. Does not bundle TheRock.
 #
 # CMake flags follow lemonade-sdk/llamacpp-rocm's Ubuntu job where those
@@ -6,7 +6,7 @@
 
 pkgname=llama.cpp-rocm-dflash2
 pkgver=0.2.0
-pkgrel=3
+pkgrel=4
 pkgdesc='llama.cpp 0.2.0 with DFlash2 speculative decoding, HIP/ROCm (Arch packages)'
 arch=(x86_64)
 url='https://github.com/maci0/llamacpp-rocm-dflash2'
@@ -37,7 +37,7 @@ source=(
 )
 sha256sums=(
   '72e6c3e70c584f84e61697e449ee388f43458d662ef8f3bd3f6b4a054c947958'
-  '2cf79c955e51077ebcaf527d7113d36ee4695e77f22ec1fb5abbc1e5a3dd7256'
+  'b5749dc1893252b6f4fb0ef62b6c8b1456718a1df0857b8232b4456fed50d952'
 )
 
 # lemonade families, all ISAs in one fat binary.

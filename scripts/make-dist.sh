@@ -48,17 +48,16 @@ if command -v patchelf >/dev/null; then
   done
 fi
 
-cat > "$out/README.txt" <<'EOF'
-llama.cpp 0.2.0 + DFlash2 (PR 27342), HIP fat binary for gfx110X
-(gfx1100, gfx1101, gfx1102, gfx1103). Same GPU set as lemonade's gfx110X zip.
+cat > "$out/README.txt" <<EOF
+llama.cpp 0.2.0 + DFlash2 (PR 27342 @ d1a522fc), HIP fat binary (${family}).
 
 Needs Arch ROCm packages (not bundled):
   pacman -S hip-runtime-amd hipblas rocblas
 
 Run (unset any lemonade LD_LIBRARY_PATH first):
-  export LD_LIBRARY_PATH="$PWD/lib:/opt/rocm/lib"
+  export LD_LIBRARY_PATH="\$PWD/lib:/opt/rocm/lib"
   export HIP_VISIBLE_DEVICES=0
-  ./llama-server -m target.gguf -md dflash2.gguf -ngl 99 -fa on \
+  ./llama-server -m target.gguf -md dflash2.gguf -ngl 99 -fa on \\
     --spec-type draft-dflash,ngram-cache --spec-draft-n-max 5
 EOF
 

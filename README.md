@@ -36,7 +36,7 @@ MTP n-max 1 still wins on both engines. DFlash2 runs here; it does not beat MTP 
 **Arch / CachyOS** (needs `hip-runtime-amd hipblas rocblas`):
 
 ```bash
-sudo pacman -U https://github.com/maci0/llamacpp-rocm-dflash2/releases/download/v0.2.0-2/llama.cpp-rocm-dflash2-0.2.0-2-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/maci0/llamacpp-rocm-dflash2/releases/download/v0.2.0-4/llama.cpp-rocm-dflash2-0.2.0-4-x86_64.pkg.tar.zst
 ```
 
 From a clone: `paru -Bi .` or `makepkg -si`.
@@ -89,4 +89,4 @@ Uses [nvidia/SPEED-Bench](https://huggingface.co/datasets/nvidia/SPEED-Bench) qu
 
 ## What this is not
 
-lemonade **b1311** (llama.cpp `9558fa4`). Upstream **b10599**. This is the **v0.2.0** tag plus PR 27342 until DFlash2 lands in a stable tag.
+lemonade **b1311** (llama.cpp `9558fa4`). Upstream **b10599**. This is the **v0.2.0** tag plus PR 27342 (`d1a522fc`) until DFlash2 lands in a stable tag.

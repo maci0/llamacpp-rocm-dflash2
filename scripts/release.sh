@@ -24,12 +24,18 @@ for z in "$root"/dist/lemonade/*.zip; do
 done
 
 notes="$root/dist/RELEASE_NOTES.md"
+ubuntu_note=""
+title="$tag (all gfx, Arch ROCm)"
+if ((${#assets[@]} > 5)); then
+  ubuntu_note="Ubuntu zips: TheRock HIP is inside each family zip."
+  title="$tag (all gfx, Arch ROCm + Ubuntu TheRock zips)"
+fi
 cat > "$notes" <<EOF
-llama.cpp v0.2.0 + DFlash2 (ggml-org/llama.cpp#27342).
+llama.cpp v0.2.0 + DFlash2 (ggml-org/llama.cpp#27342 @ d1a522fc).
 
 HIP fat binary for every lemonade family ISA (gfx103X, gfx110X, gfx1150/1151, gfx120X, gfx90a, gfx908).
 Arch package: ROCm is **not** bundled. Install \`hip-runtime-amd hipblas rocblas\`.
-Ubuntu zips: TheRock HIP is inside each family zip.
+${ubuntu_note}
 
 n-gram is in 0.2.0. Combine at runtime:
 
@@ -43,12 +49,16 @@ Assets:
 - \`PKGBUILD\`, \`dflash2.patch\`, \`.SRCINFO\` — rebuild from source
 EOF
 
+sums="$root/dist/SHA256SUMS"
+(cd "$root" && sha256sum "${assets[@]#"$root"/}" > "$sums")
+assets+=("$sums")
+
 if gh release view "$tag" >/dev/null 2>&1; then
   echo "release $tag exists, uploading assets"
   gh release upload "$tag" --clobber "${assets[@]}"
 else
   gh release create "$tag" \
-    --title "$tag (all gfx, Arch ROCm + Ubuntu TheRock zips)" \
+    --title "$title" \
     --notes-file "$notes" \
     "${assets[@]}"
 fi
