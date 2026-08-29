@@ -5,6 +5,7 @@ dist/
 *.log
 .src/
 llama.cpp-*/
+llama.cpp-*.tar.gz
 build/
 docs/bench/logs/
 docs/speed-bench/logs/

@@ -40,12 +40,21 @@ Single-shot n-max sweep on the same v0.2.0-4 binary, quiet CPU. DFlash2's best p
 **Arch / CachyOS** (needs `hip-runtime-amd hipblas rocblas`):
 
 ```bash
-sudo pacman -U https://github.com/maci0/llamacpp-rocm-dflash2/releases/download/v0.2.0-4/llama.cpp-rocm-dflash2-0.2.0-4-x86_64.pkg.tar.zst
+sudo pacman -U https://github.com/maci0/llamacpp-rocm-dflash2/releases/download/v0.2.0-5/llama.cpp-rocm-dflash2-0.2.0-5-x86_64.pkg.tar.zst
 ```
 
 From a clone: `paru -Bi .` or `makepkg -si`.
 
 Default `AMDGPU_TARGETS=all` (every lemonade family ISA in one fat binary). Thinner: `AMDGPU_TARGETS=gfx110X makepkg -si`.
+
+**Prefix build, no sudo** (CachyOS / Arch, `/opt/rocm` already installed). gfx1150-only is the 890M path:
+
+```bash
+AMDGPU_TARGETS=gfx1150 PREFIX=$HOME/llamacpp-dflash2 ./scripts/build-prefix.sh
+. ~/llamacpp-dflash2/env.sh
+```
+
+890M (Strix Point) recipe + benches: [docs/890m.md](docs/890m.md).
 
 **Ubuntu lemonade-style zips** (TheRock HIP inside the zip, one archive per family): `LEMONADE_FAMILIES=gfx110X ./scripts/build-lemonade-docker.sh`. Run from the unzipped folder with `unset LD_LIBRARY_PATH`; do not point at `/opt/rocm`. On this 7900 XTX the gfx110X zip matches lemonade on none and slightly beats it on MTP. Numbers: [docs/bench.md](docs/bench.md).
 
@@ -82,6 +91,8 @@ flowchart LR
 | `gfx110X` | gfx1100;gfx1101;gfx1102;gfx1103 |
 | `gfx103X` / `gfx120X` | family lists |
 | `gfx1150` `gfx1151` `gfx90a` `gfx908` | as written |
+
+Verified on this tree: **gfx1100** (RX 7900 XTX, [docs/bench.md](docs/bench.md)) and **gfx1150** (Radeon 890M / Ryzen AI 9 HX 370, [docs/890m.md](docs/890m.md)). On the 890M, lemonade `b10469`/`b1317` cannot load DFlash2 GGUFs; the prefix build above does (`block_size=8`). MTP n-max 1 is still the fastest *3-rep* path on that APU (~6.1 t/s vs ~4.4 none).
 
 ## SPEED-Bench
 
