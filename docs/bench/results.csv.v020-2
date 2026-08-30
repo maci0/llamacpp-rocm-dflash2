@@ -1,0 +1,17 @@
+label,spec,n_max,tg_tps,pp_tps,accept,vram_mib,rc,notes
+none,none,0,18.6,80.5,,17192,0,
+ngram_cache,ngram-cache,0,20.5,95.7,,17267,0,
+ngram_simple_16_8,ngram-simple,0,28.4,80.0,,17126,0,
+mtp_nm1,draft-mtp,1,30.1,60.8,,17463,0,
+mtp_nm2,draft-mtp,2,20.3,45.4,,17528,0,
+dflash2_nm1,draft-dflash,1,7.7,4.8,,1776,0,vram sample likely early
+dflash2_nm2,draft-dflash,2,5.0,2.2,,1858,0,vram sample likely early
+dflash2_nm3,draft-dflash,3,6.7,2.2,,1822,0,vram sample likely early
+dflash2_nm4,draft-dflash,4,10.9,12.5,,1806,0,vram sample likely early
+dflash2_nm5,draft-dflash,5,9.3,4.4,,17059,0,
+dflash2_nm6,draft-dflash,6,15.3,3.0,,1900,0,vram sample likely early
+dflash2_nm7,draft-dflash,7,3.7,1.9,,2009,0,vram sample likely early
+dflash2_ngram_nm1,"draft-dflash,ngram-cache",1,8.3,1.7,,1820,0,vram sample likely early
+dflash2_ngram_nm3,"draft-dflash,ngram-cache",3,4.0,11.2,,1858,0,vram sample likely early
+dflash2_ngram_nm5,"draft-dflash,ngram-cache",5,13.3,6.3,,1809,0,vram sample likely early
+dflash2_ngram_nm7,"draft-dflash,ngram-cache",7,11.2,9.9,,1737,0,vram sample likely early
